@@ -14,6 +14,11 @@ def find_matches(dna_vector):
         similarity = cosine_similarity(existing_dna_vector,new_dna_vector)[0][0]
     
         if similarity > 0.85:
-            matches.append({"file":data["filename"],"similarity":float(similarity)})
+            matches.append({
+                "file_id": doc.id,
+                "owner_id": data.get("owner_id"),
+                "similarity": float(similarity),
+                "timestamp": str(data.get("timestamp"))
+            })
     
     return matches
