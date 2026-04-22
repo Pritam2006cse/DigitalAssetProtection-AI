@@ -1,7 +1,10 @@
 from google.cloud import storage
-client = storage.Client.from_service_account_json("digitalassetprotectionai-cfecbc992a5d.json")
+import os
+from dotenv import load_dotenv
+load_dotenv()
+client = storage.Client.from_service_account_json(os.getenv("Service_Account_Key"))
 def upload_to_gcs(file_path,filename):
-    bucket = client.bucket("digitalasset-bucket")
+    bucket = client.bucket(os.getenv("STORAGE_BUCKET"))
     blob = bucket.blob(filename)
     blob.upload_from_filename(file_path)
 

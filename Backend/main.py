@@ -1,75 +1,120 @@
-from fastapi import FastAPI,File,UploadFile,Header
+from fastapi import FastAPI,File,UploadFile,Depends,BackgroundTasks,HTTPException
+from auth import get_current_user, hash_password, verify_password, create_access_token
+from fastapi.security import OAuth2PasswordRequestForm
 from storage import upload_to_gcs
-from embedding import get_image_embedding
+from embedding import embed_watermark, extract_watermark, get_embedding
 from db import save_content
 from db import db
 from matcher import find_matches
 from datetime import datetime
+import shutil
+from google.cloud import firestore
 from email_service import send_email
 import os
 os.makedirs("temp", exist_ok=True)
 
-import shutil
+
 app = FastAPI()
-def get_current_user(authorization: str = Header(default="test_user")):
-    return authorization
 @app.get("/")
 def read_root():
     return {"message": "DigitalAssetProtection AI running"}
+
+
+@app.post("/register")
+def register(form_data: OAuth2PasswordRequestForm = Depends()):
+    existing = db.collection("users").where("username","==",form_data.username).get()
+    if existing:
+        raise HTTPException(status_code = 400, detail="Username already exists")
+    hashed = hash_password(form_data.password)
+    db.collection("users").add({"username":form_data.username,"password":hashed})
+    return {"message":"User Registered Successfully"}
+
+@app.post("/token")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    users = db.collection("users").where("username", "==", form_data.username).get()
+    if not users:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    user_data = users[0].to_dict()
+    if not verify_password(form_data.password, user_data["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_access_token({"sub": form_data.username})
+    return {"access_token": token, "token_type": "bearer"}
+
+
 @app.post("/upload")
-def upload_file(file:UploadFile=File(...),authorization: str = Header(default="test_user")):
-    user_id = get_current_user(authorization)
+def upload_file(file:UploadFile=File(...),background_tasks: BackgroundTasks = BackgroundTasks(),user_id: str = Depends(get_current_user)):
     file_location = f"temp/{file.filename}"
 
     with open(file_location,"wb") as buffer:
         shutil.copyfileobj(file.file,buffer)
     
-    url = upload_to_gcs(file_location, file.filename)
-    dna_vector = get_image_embedding(file_location)
-    #dna_vector = [0.1] * 128
-    matches = find_matches(dna_vector)
-    current_time = datetime.now()
-    infringements = []
+    background_tasks.add_task(process_asset, file_location, file.filename, user_id)
 
-    for match in matches:
-        if match["owner_id"] != user_id:
-            infringements.append(match)
-            alert = {
-                "owner_id": match["owner_id"],
-                "violator_id": user_id,
-                "content_id": match["file_id"],
-                "similarity": match["similarity"],
-                "risk": get_risk(match["similarity"]),
-                "timestamp": current_time
-            }
-
-            db.collection("alerts").add(alert)
+    return {"message": "Upload received, please wait patiently",
+            "filename":file.filename,
+            "status": "Processing"}
 
 
-    parent_id = None
-    if matches:
-        parent_id = matches[0]["file_id"]
-    data = {
-            "filename": file.filename,
-            "url": url,
-            "embedding": list(dna_vector),
-            "owner_id": user_id,
-            "derived_from": parent_id,
-            "timestamp": current_time
-            }
-    save_content(data)
-    return {"message": "Asset Protected",
-            "url": url,
-            "dna_length": len(dna_vector),
-            "matches": matches,
-            "infringements": infringements,
-            "status": "Success"}
 def get_risk(similarity):
     if similarity > 0.95:
         return "HIGH"
     elif similarity > 0.85:
         return "MEDIUM"
     return "LOW"
+
+
+def process_asset(file_location: str, filename: str, user_id: str):
+    try:
+        url = upload_to_gcs(file_location, filename)
+        dna_vector,file_type = get_embedding(file_location)
+        if file_type == "image":
+            embed_watermark(file_location,user_id)
+        matches = find_matches(dna_vector,file_type)
+        current_time = datetime.now()
+        infringements = []
+
+        for match in matches:
+            if match["owner_id"] != user_id:
+                if match["timestamp"] < str(current_time):
+                    infringements.append(match)
+                    alert = {
+                        "owner_id": match["owner_id"],
+                        "violator_id": user_id,
+                        "content_id": match["file_id"],
+                        "similarity": match["similarity"],
+                        "risk": get_risk(match["similarity"]),
+                        "timestamp": current_time
+                    }
+                    db.collection("alerts").add(alert)
+
+
+        parent_id = None
+        if matches:
+            parent_id = matches[0]["file_id"]
+        data = {
+                "filename": filename,
+                "url": url,
+                "embedding": list(dna_vector),
+                "owner_id": user_id,
+                "derived_from": parent_id,
+                "timestamp": current_time
+                }
+        save_content(data)
+    finally:
+        if os.path.exists(file_location):
+            os.remove(file_location)
+
+
+@app.get("/status/{filename}")
+def get_status(filename: str, user_id: str = Depends(get_current_user)):
+    results = db.collection("contents").where("filename","==",filename).where("owner_id","==",user_id).get()
+    if not results:
+        return {"status":{"Processing"}}
+    else:
+        return {"status":{"Complete"}}
+
 
 @app.get("/graph")
 def get_graph():
@@ -99,7 +144,7 @@ def get_graph():
     }
 
 @app.post("/generate-takedown")
-def generate_takedown(alert_id: str):
+def generate_takedown(alert_id: str,user_id: str = Depends(get_current_user)):
 
     alert_doc = db.collection("alerts").document(alert_id).get()
 
@@ -126,11 +171,11 @@ Generated by DigitalAssetProtection AI
     }
 
 @app.post("/send-takedown")
-def send_takedown_email(to_email,alert_id):
+def send_takedown_email(to_email,alert_id,user_id: str = Depends(get_current_user)):
     alert_doc = db.collection("alerts").document(alert_id).get()
-    if not alert_doc.exits:
+    if not alert_doc.exists:
         return {"error":"Alert Not Found"}
-    alert = alert.to_dict()
+    alert = alert_doc.to_dict()
     notice = f"""
 Subject: Unauthorized Use of Digital Asset
 
@@ -150,3 +195,26 @@ Generated by DigitalAssetProtection AI
         return {"message":"Email sent successfully"}
     else:
         return {"error":"Email Failed"}
+    
+
+@app.get("/alerts")
+def get_my_alerts(user_id: str = Depends(get_current_user)):
+    alerts = db.collection("alerts")\
+               .where("owner_id", "==", user_id)\
+               .order_by("timestamp", direction=firestore.Query.DESCENDING)\
+               .limit(50)\
+               .stream()
+    return [{"id": a.id, **a.to_dict()} for a in alerts]
+
+
+@app.post("/verify-ownership")
+async def verify_ownership(file: UploadFile = File(...),claimed_owner_id: str = "",user_id: str = Depends(get_current_user)):
+    file_location = f"temp/{file.filename}"
+    with open(file_location,"wb") as buffer:
+        shutil.copyfileobj(file.file,buffer)
+    try:
+        result = extract_watermark(file_location,claimed_owner_id)
+        return result
+    finally:
+        if os.path.exists(file_location):
+            os.remove(file_location)
