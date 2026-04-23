@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigitalAsset Protection — Alerts</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/alerts.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tl2)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tl2" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
+      </div>
+      <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+    </div>
+    <nav class="topbar-nav">
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="results.html" class="nav-link">Results</a>
+      <a href="alerts.html" class="nav-link active">Alerts</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">User</span>
+          <span class="user-email" id="user-email">email</span>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="alerts-main">
+
+    <!-- Page header -->
+    <div class="alerts-hero">
+      <div class="alerts-hero-inner">
+        <h1>Alerts</h1>
+        <p class="alerts-desc">Monitor and manage security alerts for your digital assets</p>
+      </div>
+    </div>
+
+    <!-- Alerts list -->
+    <div class="alerts-body">
+      <div id="alerts-list">
+        <!-- Alerts will be populated here -->
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/alerts.js"></script>
+</body>
+</html>
