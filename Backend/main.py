@@ -133,9 +133,9 @@ def process_asset(file_location: str, filename: str, user_id: str):
 def get_status(filename: str, user_id: str = Depends(get_current_user)):
     results = db.collection("contents").where("filename","==",filename).where("owner_id","==",user_id).get()
     if not results:
-        return {"status":{"Processing"}}
+        return {"status":"Processing"}
     else:
-        return {"status":{"Complete"}}
+        return {"status":"Complete"}
 
 
 @app.get("/graph")
