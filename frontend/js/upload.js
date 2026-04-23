@@ -21,7 +21,7 @@ function handleDrop(e) {
   document.getElementById('drop-zone').classList.remove('active');
   const f = e.dataTransfer.files[0]; if(!f) return;
   const ext = f.name.split('.').pop().toLowerCase();
-  if(!['jpg','jpeg','webp','heic'].includes(ext)) { showUploadError('Please drop a JPG, JPEG, WEBP, or HEIC file.'); return; }
+  if(!['jpg','jpeg','png','webp','heic','mp4','mov','avi','pdf','docx','txt'].includes(ext)) { showUploadError('Please drop a JPG, JPEG, WEBP, HEIC, PNG, MP4, PDF, DOCS, TXT file.'); return; }
   applyFile(f);
 }
 
@@ -146,9 +146,12 @@ async function callGraph() {
 /* ── POST /verify-ownership ── */
 async function callVerifyOwnership() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to verify ownership'); return; }
+  if (!selectedFile) { showToast('Upload an image first to verify ownership'); return; }
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+  fd.append('claimed_owner_id', getSession()?.email || '');
   try {
-    const res  = await authFetch(`${getApiUrl()}/verify-ownership`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
+    const res  = await authFetch(`${getApiUrl()}/verify-ownership`, { method:'POST', body: fd });
     const data = await res.json();
     showResponse('POST /verify-ownership', data);
   } catch(e) { showToast('Could not reach /verify-ownership'); }
@@ -157,9 +160,10 @@ async function callVerifyOwnership() {
 /* ── POST /generate-takedown ── */
 async function callTakedownGenerate() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to generate a takedown notice'); return; }
+  const alertId = prompt('Enter Alert ID (get from View Alerts):');
+  if (!alertId) return;
   try {
-    const res  = await authFetch(`${getApiUrl()}/generate-takedown`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
+    const res  = await authFetch(`${getApiUrl()}/generate-takedown?alert_id=${alertId}`, { method:'POST' });
     const data = await res.json();
     showResponse('POST /generate-takedown', data);
   } catch(e) { showToast('Could not reach /generate-takedown'); }
@@ -168,9 +172,11 @@ async function callTakedownGenerate() {
 /* ── POST /send-takedown ── */
 async function callSendTakedown() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to send a takedown notice'); return; }
+  const alertId = prompt('Enter Alert ID:');
+  const toEmail = prompt('Enter recipient email:');
+  if (!alertId || !toEmail) return;
   try {
-    const res  = await authFetch(`${getApiUrl()}/send-takedown`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
+    const res  = await authFetch(`${getApiUrl()}/send-takedown?alert_id=${alertId}&to_email=${toEmail}`, { method:'POST' });
     const data = await res.json();
     showResponse('POST /send-takedown', data);
     showToast('📧 Takedown email sent!');

@@ -32,7 +32,8 @@ function isOnSubPage() { return window.location.pathname.includes('/pages/'); }
 /* ── Populate UI ── */
 function populateUserUI(user) {
   if (!user) return;
-  const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const initials = user.name
+  ? user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2): '?';
   ['user-avatar','profile-avatar'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=initials; });
   ['user-name','profile-name'].forEach(id   => { const e=document.getElementById(id); if(e) e.textContent=user.name; });
   ['user-email','profile-email'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=user.email; });

@@ -143,7 +143,7 @@
       ondragover="event.preventDefault();document.getElementById('drop-zone').classList.add('active')"
       ondragleave="document.getElementById('drop-zone').classList.remove('active')"
       ondrop="handleDrop(event)">
-      <input type="file" id="file-input" accept=".jpg,.jpeg,.webp,.heic,image/jpeg,image/webp,image/heic" onchange="handleFileSelect(event)"/>
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp,.heic,.mp4,.mov,.avi,.pdf,.docx,.txt" onchange="handleFileSelect(event)"/>
 
       <div class="drop-idle" id="drop-idle">
         <div class="drop-icon-wrap">
