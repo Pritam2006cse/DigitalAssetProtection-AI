@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigitalAsset Protection — Match Results</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/results.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tl2)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tl2" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
+      </div>
+      <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+    </div>
+    <nav class="topbar-nav">
+      <a href="upload.html" class="nav-link">Upload</a>
+      <a href="results.html" class="nav-link active">Results</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">User</span>
+          <span class="user-email" id="user-email">email</span>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="results-main">
+
+    <!-- Page header -->
+    <div class="results-hero">
+      <div class="results-hero-inner">
+        <div class="breadcrumb">
+          <a href="upload.html">← Back to Upload</a>
+        </div>
+        <h1 id="results-title">Match Analysis Complete</h1>
+        <p id="results-desc" class="results-desc">Scanning results from the protected asset database</p>
+      </div>
+    </div>
+
+    <div class="results-body">
+
+      <!-- Uploaded asset card -->
+      <div class="asset-origin-card" id="asset-origin-card">
+        <div class="origin-label">Your uploaded asset</div>
+        <div class="origin-inner">
+          <div class="origin-thumb-wrap">
+            <img id="origin-thumb" src="" alt="Your asset" />
+          </div>
+          <div class="origin-details">
+            <h3 id="origin-filename">image.jpg</h3>
+            <div class="origin-meta">
+              <div class="meta-row">
+                <span class="meta-key">Stored at</span>
+                <a id="origin-url" href="#" class="meta-val link" target="_blank">—</a>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">DNA Length</span>
+                <span id="origin-dna" class="meta-val">—</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Status</span>
+                <span class="meta-val"><span class="badge badge-success" id="origin-status">Asset Protected</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Match summary banner -->
+      <div class="match-summary" id="match-summary">
+        <div class="summary-stat" id="stat-total">
+          <span class="stat-num">0</span>
+          <span class="stat-lbl">Matches Found</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-stat" id="stat-high">
+          <span class="stat-num">0</span>
+          <span class="stat-lbl">High Similarity</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-stat" id="stat-top">
+          <span class="stat-num">—</span>
+          <span class="stat-lbl">Top Match %</span>
+        </div>
+      </div>
+
+      <!-- Match list -->
+      <div class="matches-section">
+        <div class="matches-header">
+          <h2>Database Matches</h2>
+          <p id="matches-subtext">Ordered by similarity score</p>
+        </div>
+        <div class="match-list" id="match-list">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- No matches state -->
+      <div class="no-matches-card" id="no-matches-card" style="display:none">
+        <div class="no-match-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
+        </div>
+        <h3>No matches found</h3>
+        <p>Your asset appears to be original. No similar content was detected in the protected database.</p>
+        <a href="upload.html" class="btn-secondary">Upload another asset</a>
+      </div>
+
+      <div class="results-footer">
+        <a href="upload.html" class="btn-secondary">← Upload another asset</a>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/results.js"></script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DigitalAsset Protection — Dashboard</title>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <link rel="stylesheet" href="../css/dashboard.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tl1)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tl1" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
+    </div>
+    <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="upload.html"  class="nav-link active">Dashboard</a>
+    <a href="alerts.html"  class="nav-link">Alerts</a>
+    <a href="graph.html"   class="nav-link">Asset Graph</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="user-chip">
+      <div class="avatar" id="user-avatar">U</div>
+      <div class="user-info">
+        <span class="user-name" id="user-name">User</span>
+        <span class="user-email" id="user-email">email</span>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="dash-layout">
+
+  <!-- ══ LEFT ══ -->
+  <aside class="dash-left">
+
+    <div class="profile-card">
+      <div class="profile-avatar" id="profile-avatar">U</div>
+      <div class="profile-info">
+        <h3 id="profile-name">User</h3>
+        <p id="profile-email">email</p>
+      </div>
+      <span class="profile-badge">Active</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><span class="stat-n" id="stat-total">0</span><span class="stat-l">Uploads</span></div>
+      <div class="stat-box"><span class="stat-n" id="stat-matches">0</span><span class="stat-l">Matches</span></div>
+      <div class="stat-box"><span class="stat-n" id="stat-protected">0</span><span class="stat-l">Protected</span></div>
+    </div>
+
+    <!-- Quick Actions — endpoint buttons -->
+    <div class="quick-actions">
+      <div class="qa-label">Quick Actions</div>
+
+      <button class="qa-btn" onclick="callAlerts()">
+        <div class="qa-icon qa-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+        <div class="qa-info"><span class="qa-title">View Alerts</span><span class="qa-sub">GET /alerts</span></div>
+        <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+
+      <button class="qa-btn" onclick="callGraph()">
+        <div class="qa-icon qa-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <div class="qa-info"><span class="qa-title">Asset Graph</span><span class="qa-sub">GET /graph</span></div>
+        <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+
+      <button class="qa-btn" onclick="callVerifyOwnership()">
+        <div class="qa-icon qa-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
+        </div>
+        <div class="qa-info"><span class="qa-title">Verify Ownership</span><span class="qa-sub">POST /verify-ownership</span></div>
+        <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+
+      <button class="qa-btn" onclick="callTakedownGenerate()">
+        <div class="qa-icon qa-red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        </div>
+        <div class="qa-info"><span class="qa-title">Generate Takedown</span><span class="qa-sub">POST /generate-takedown</span></div>
+        <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+
+      <button class="qa-btn" onclick="callSendTakedown()">
+        <div class="qa-icon qa-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+        </div>
+        <div class="qa-info"><span class="qa-title">Send Takedown Email</span><span class="qa-sub">POST /send-takedown</span></div>
+        <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+    </div>
+
+    <!-- History -->
+    <div class="history-card">
+      <div class="history-header">
+        <span class="history-title">Upload History</span>
+        <button class="btn-reset" onclick="resetHistory()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Reset
+        </button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty" id="history-empty">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+          <span>No uploads yet</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-config-card">
+      <label>API Base URL</label>
+      <input type="text" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" oninput="saveApiUrl(this.value)"/>
+      <span class="config-hint">Your running FastAPI server</span>
+    </div>
+
+  </aside>
+
+  <!-- ══ RIGHT ══ -->
+  <section class="dash-right">
+
+    <div class="upload-header">
+      <div>
+        <h2>Upload Asset</h2>
+        <p>JPG · JPEG · WEBP · HEIC &nbsp;·&nbsp; Max 20MB</p>
+      </div>
+      <button class="btn-clear-upload" id="btn-clear-upload" onclick="clearFile()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        Reset Upload
+      </button>
+    </div>
+
+    <div class="drop-zone" id="drop-zone"
+      ondragover="event.preventDefault();document.getElementById('drop-zone').classList.add('active')"
+      ondragleave="document.getElementById('drop-zone').classList.remove('active')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.webp,.heic,image/jpeg,image/webp,image/heic" onchange="handleFileSelect(event)"/>
+
+      <div class="drop-idle" id="drop-idle">
+        <div class="drop-icon-wrap">
+          <svg viewBox="0 0 48 48" fill="none">
+            <rect width="48" height="48" rx="14" fill="url(#di1)" opacity="0.12"/>
+            <path d="M24 32V18M17 25l7-7 7 7" stroke="url(#di2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 34h20" stroke="url(#di3)" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="di1" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient>
+              <linearGradient id="di2" x1="17" y1="18" x2="31" y2="25"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient>
+              <linearGradient id="di3" x1="14" y1="34" x2="34" y2="34"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <p class="drop-title">Drag & drop your image here</p>
+        <p class="drop-sub">or <span class="drop-link">browse files</span></p>
+      </div>
+
+      <div class="drop-preview" id="drop-preview" style="display:none">
+        <img id="preview-img" src="" alt="preview"/>
+        <div class="preview-meta">
+          <div class="preview-info">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+            <span id="preview-name">image.jpg</span>
+          </div>
+          <span id="preview-size" class="preview-size"></span>
+          <!-- Status chip shown after upload -->
+          <span class="status-chip" id="status-chip" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-actions">
+      <button class="btn-upload" id="upload-btn" disabled onclick="doUpload()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="upload-btn-text">Select an image first</span>
+        <div class="upload-spinner" id="upload-spinner"></div>
+      </button>
+
+      <!-- Check status button (appears after upload) -->
+      <button class="btn-status" id="btn-check-status" style="display:none" onclick="checkStatus()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+        Check Status
+      </button>
+    </div>
+
+    <div class="status-bar" id="status-bar" style="display:none">
+      <div class="step" id="step-1"><div class="step-dot"></div><span>Uploading to storage</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-2"><div class="step-dot"></div><span>Generating DNA fingerprint</span></div>
+      <div class="step-line"></div>
+      <div class="step" id="step-3"><div class="step-dot"></div><span>Scanning database</span></div>
+    </div>
+
+    <!-- API response panel -->
+    <div class="response-panel" id="response-panel" style="display:none">
+      <div class="response-header">
+        <span id="response-title">Response</span>
+        <button class="response-close" onclick="document.getElementById('response-panel').style.display='none'">✕</button>
+      </div>
+      <pre id="response-body" class="response-body"></pre>
+    </div>
+
+    <div class="error-card" id="error-card" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="error-text">Something went wrong.</span>
+    </div>
+
+  </section>
+</main>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/upload.js"></script>
+</body>
+</html>

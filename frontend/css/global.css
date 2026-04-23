@@ -1,0 +1,162 @@
+/* ============================================================
+   GLOBAL.CSS — DigitalAsset Protection AI
+   Shared reset, tokens, topbar, typography
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg:        #080a10;
+  --bg2:       #0f1219;
+  --surface:   #13161f;
+  --surface2:  #1b1f2c;
+  --surface3:  #232839;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.13);
+  --border3:   rgba(255,255,255,0.2);
+
+  --accent:    #4f8ef7;
+  --accent2:   #7c5df7;
+  --accent-glow: rgba(79,142,247,0.18);
+
+  --text:      #eef0f8;
+  --text2:     #9ca3be;
+  --text3:     #5c637d;
+
+  --success:   #2ecc8a;
+  --warn:      #f7a14f;
+  --danger:    #f75f5f;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --shadow: 0 4px 24px rgba(0,0,0,0.45);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  height: 60px;
+  background: rgba(8,10,16,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 0.5px solid var(--border2);
+  display: flex; align-items: center;
+  padding: 0 24px; gap: 16px;
+}
+
+.topbar-left {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+
+.topbar-logo {
+  width: 32px; height: 32px; flex-shrink: 0;
+}
+.topbar-logo svg { width: 100%; height: 100%; }
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--text); letter-spacing: -0.01em;
+}
+.topbar-title em { font-style: normal; color: var(--accent); }
+
+.topbar-nav {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: 24px;
+}
+
+.nav-link {
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text); background: var(--surface2); text-decoration: none; }
+.nav-link.active { color: var(--accent); background: rgba(79,142,247,0.1); }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); border: 0.5px solid var(--border2);
+  border-radius: 20px; padding: 6px 14px 6px 8px;
+}
+
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+
+.user-info { display: flex; flex-direction: column; gap: 1px; }
+.user-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.2; }
+.user-email { font-size: 11px; color: var(--text3); line-height: 1.2; }
+
+.btn-logout {
+  background: transparent;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  color: var(--text2); font-size: 12px;
+  cursor: pointer; transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-logout:hover { border-color: var(--border3); color: var(--text); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+}
+.badge-success {
+  background: rgba(46,204,138,0.12);
+  color: var(--success);
+  border: 0.5px solid rgba(46,204,138,0.28);
+}
+.badge-warn {
+  background: rgba(247,161,79,0.12);
+  color: var(--warn);
+  border: 0.5px solid rgba(247,161,79,0.28);
+}
+.badge-danger {
+  background: rgba(247,95,95,0.12);
+  color: var(--danger);
+  border: 0.5px solid rgba(247,95,95,0.28);
+}
+.badge-info {
+  background: rgba(79,142,247,0.12);
+  color: var(--accent);
+  border: 0.5px solid rgba(79,142,247,0.28);
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
