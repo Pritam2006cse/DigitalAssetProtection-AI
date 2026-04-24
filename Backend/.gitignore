@@ -46,3 +46,7 @@ temp/
 
 # Credentials
 *.json
+
+__pycache__/
+*.pyc
+.env
