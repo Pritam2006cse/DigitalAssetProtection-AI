@@ -87,7 +87,7 @@ function renderMatches(matches) {
     const pctClass = pctValue === null ? 'low' : pctValue >= 80 ? 'high' : pctValue >= 50 ? 'mid' : 'low';
     const barWidth = pctValue !== null ? pctValue : 0;
 
-    const filename = match.file_id || match.filename || match.name || `Match ${index + 1}`;
+    const filename = match.file || match.filename || match.name || `Match ${index + 1}`;
     const url      = match.url || '';
     const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : '';
 

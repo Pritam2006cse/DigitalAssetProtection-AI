@@ -11,51 +11,104 @@
 </head>
 <body>
 
-  <!-- Topbar -->
-  <header class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-logo">
-        <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tl2)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tl2" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
-      </div>
-      <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tl1)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tl1" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
     </div>
-    <nav class="topbar-nav">
-      <a href="upload.html" class="nav-link">Upload</a>
-      <a href="results.html" class="nav-link">Results</a>
-      <a href="alerts.html" class="nav-link active">Alerts</a>
-    </nav>
-    <div class="topbar-right">
-      <div class="user-chip">
-        <div class="avatar" id="user-avatar">U</div>
-        <div class="user-info">
-          <span class="user-name" id="user-name">User</span>
-          <span class="user-email" id="user-email">email</span>
+    <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+  </div>
+  <nav class="topbar-nav">
+    <a href="upload.html" class="nav-link">Dashboard</a>
+    <a href="alerts.html" class="nav-link active">Alerts</a>
+    <a href="graph.html"  class="nav-link">Asset Graph</a>
+  </nav>
+  <div class="topbar-right">
+    <div class="user-chip">
+      <div class="avatar" id="user-avatar">U</div>
+      <div class="user-info">
+        <span class="user-name" id="user-name">User</span>
+        <span class="user-email" id="user-email">email</span>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="alerts-main">
+
+  <!-- Hero -->
+  <div class="alerts-hero">
+    <div class="alerts-hero-inner">
+      <div class="hero-left">
+        <h1>Infringement Alerts</h1>
+        <p>Real-time monitoring of your protected digital assets</p>
+      </div>
+      <div class="hero-stats" id="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-n" id="stat-total">—</span>
+          <span class="hero-stat-l">Total Alerts</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-n red" id="stat-high">—</span>
+          <span class="hero-stat-l">High Risk</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-n yellow" id="stat-medium">—</span>
+          <span class="hero-stat-l">Medium Risk</span>
         </div>
       </div>
-      <button class="btn-logout" onclick="logout()">Sign out</button>
     </div>
-  </header>
+  </div>
 
-  <main class="alerts-main">
-
-    <!-- Page header -->
-    <div class="alerts-hero">
-      <div class="alerts-hero-inner">
-        <h1>Alerts</h1>
-        <p class="alerts-desc">Monitor and manage security alerts for your digital assets</p>
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="filter-bar-inner">
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterAlerts('ALL', this)">All</button>
+        <button class="filter-tab" onclick="filterAlerts('HIGH', this)">
+          <span class="dot red"></span> High Risk
+        </button>
+        <button class="filter-tab" onclick="filterAlerts('MEDIUM', this)">
+          <span class="dot yellow"></span> Medium Risk
+        </button>
+        <button class="filter-tab" onclick="filterAlerts('LOW', this)">
+          <span class="dot green"></span> Low Risk
+        </button>
       </div>
+      <button class="btn-refresh" onclick="loadAlerts()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        Refresh
+      </button>
     </div>
+  </div>
 
-    <!-- Alerts list -->
-    <div class="alerts-body">
-      <div id="alerts-list">
-        <!-- Alerts will be populated here -->
+  <!-- Alerts body -->
+  <div class="alerts-body">
+    <div class="alerts-grid" id="alerts-grid">
+      <!-- populated by JS -->
+    </div>
+    <div class="alerts-empty" id="alerts-empty" style="display:none">
+      <div class="empty-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
       </div>
+      <h3>No alerts found</h3>
+      <p>Your assets are safe — no infringements detected.</p>
     </div>
+    <div class="alerts-loading" id="alerts-loading">
+      <div class="loading-spinner"></div>
+      <span>Loading alerts...</span>
+    </div>
+  </div>
 
-  </main>
+</main>
 
-  <script src="../js/auth.js"></script>
-  <script src="../js/alerts.js"></script>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/alerts.js"></script>
 </body>
 </html>

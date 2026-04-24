@@ -63,15 +63,15 @@
         <div class="qa-icon qa-orange">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         </div>
-        <div class="qa-info"><span class="qa-title">View Alerts</span><span class="qa-sub">GET /alerts</span></div>
+        <div class="qa-info"><span class="qa-title">View Alerts</span></div>
         <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
       </button>
 
       <button class="qa-btn" onclick="callGraph()">
         <div class="qa-icon qa-purple">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
         </div>
-        <div class="qa-info"><span class="qa-title">Asset Graph</span><span class="qa-sub">GET /graph</span></div>
+        <div class="qa-info"><span class="qa-title">Asset Graph</span></div>
         <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
       </button>
 
@@ -79,7 +79,7 @@
         <div class="qa-icon qa-green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
         </div>
-        <div class="qa-info"><span class="qa-title">Verify Ownership</span><span class="qa-sub">POST /verify-ownership</span></div>
+        <div class="qa-info"><span class="qa-title">Verify Ownership</span></div>
         <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
       </button>
 
@@ -87,7 +87,7 @@
         <div class="qa-icon qa-red">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
         </div>
-        <div class="qa-info"><span class="qa-title">Generate Takedown</span><span class="qa-sub">POST /generate-takedown</span></div>
+        <div class="qa-info"><span class="qa-title">Generate Takedown</span></div>
         <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
       </button>
 
@@ -95,7 +95,7 @@
         <div class="qa-icon qa-blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
         </div>
-        <div class="qa-info"><span class="qa-title">Send Takedown Email</span><span class="qa-sub">POST /send-takedown</span></div>
+        <div class="qa-info"><span class="qa-title">Send Takedown Email</span></div>
         <svg class="qa-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg>
       </button>
     </div>
@@ -115,12 +115,6 @@
           <span>No uploads yet</span>
         </div>
       </div>
-    </div>
-
-    <div class="api-config-card">
-      <label>API Base URL</label>
-      <input type="text" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" oninput="saveApiUrl(this.value)"/>
-      <span class="config-hint">Your running FastAPI server</span>
     </div>
 
   </aside>
@@ -143,7 +137,7 @@
       ondragover="event.preventDefault();document.getElementById('drop-zone').classList.add('active')"
       ondragleave="document.getElementById('drop-zone').classList.remove('active')"
       ondrop="handleDrop(event)">
-      <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp,.heic,.mp4,.mov,.avi,.pdf,.docx,.txt" onchange="handleFileSelect(event)"/>
+      <input type="file" id="file-input" accept=".jpg,.jpeg,.webp,.heic,.mp3,.zip,.pdf,.ppt,.pptx,image/jpeg,image/webp,image/heic,audio/mpeg,application/zip,application/pdf" onchange="handleFileSelect(event)"/>
 
       <div class="drop-idle" id="drop-idle">
         <div class="drop-icon-wrap">
@@ -158,7 +152,7 @@
             </defs>
           </svg>
         </div>
-        <p class="drop-title">Drag & drop your image here</p>
+        <p class="drop-title">Drag & drop your file here</p>
         <p class="drop-sub">or <span class="drop-link">browse files</span></p>
       </div>
 
@@ -179,7 +173,7 @@
     <div class="upload-actions">
       <button class="btn-upload" id="upload-btn" disabled onclick="doUpload()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span id="upload-btn-text">Select an image first</span>
+        <span id="upload-btn-text">Select a file</span>
         <div class="upload-spinner" id="upload-spinner"></div>
       </button>
 
