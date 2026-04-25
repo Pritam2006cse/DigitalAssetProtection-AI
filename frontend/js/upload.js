@@ -8,9 +8,16 @@ let lastUploadedFilename = null;
 document.addEventListener('DOMContentLoaded', () => {
   renderHistory();
   updateStats();
-  // Sync API url input from storage
   const inp = document.getElementById('api-url');
   if (inp) inp.value = getApiUrl();
+
+  
+  const saved = sessionStorage.getItem('dap_last_filename');
+  if (saved) {
+    lastUploadedFilename = saved;
+    document.getElementById('btn-check-status').style.display = 'flex';
+    showToast(`Last upload: ${saved}`);
+  }
 });
 
 /* ── File select / drop ── */
@@ -54,6 +61,7 @@ function applyFile(file) {
 
 function clearFile() {
   selectedFile = null; lastUploadedFilename = null;
+  sessionStorage.removeItem('dap_last_filename');
   document.getElementById('file-input').value = '';
   document.getElementById('drop-idle').style.display    = 'flex';
   document.getElementById('drop-preview').style.display = 'none';
@@ -93,8 +101,16 @@ async function doUpload() {
     const data = await res.json();
     setStep(3,'done');
 
-    lastUploadedFilename = selectedFile.name;
+    const ext = selectedFile.name.split('.').pop().toLowerCase();
+    const imageExts = ['jpg','jpeg','webp','heic','png','gif'];
+    const baseName = selectedFile.name.substring(0, selectedFile.name.lastIndexOf('.'));
+    const safeUser = (session?.email || '').replace(/@/g, '_').replace(/\./g, '_');
+    const savedFilename = imageExts.includes(ext)
+      ? `${safeUser}_${baseName}_wm.png`
+      : selectedFile.name;
 
+    lastUploadedFilename = savedFilename;
+    sessionStorage.setItem('dap_last_filename', savedFilename);
     // Show status button + chip
     document.getElementById('btn-check-status').style.display = 'flex';
     const chip = document.getElementById('status-chip');
@@ -153,31 +169,139 @@ async function callGraph() {
 /* ── POST /verify-ownership ── */
 async function callVerifyOwnership() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to verify ownership'); return; }
+
+  // Restore from sessionStorage if variable is null
+  if (!lastUploadedFilename) {
+    lastUploadedFilename = sessionStorage.getItem('dap_last_filename');
+  }
+
+  if (!lastUploadedFilename) {
+    showToast('Upload a file first to verify ownership');
+    return;
+  }
+
+  const session = getSession();
+
+  // ✅ Ask which file to verify — defaults to their own last uploaded file
+  const filenameToVerify = prompt(
+    'Enter filename to verify (leave blank to use your last uploaded file):',
+    lastUploadedFilename  // ← pre-fills with their own file
+  );
+  if (filenameToVerify === null) return;  // user clicked cancel
+
+  // ✅ Ask which email to claim ownership for — defaults to logged in email
+  const claimedEmail = prompt(
+    'Enter email to verify ownership for:',
+    session?.email || ''  // ← pre-fills with their own email
+  );
+  if (!claimedEmail) return;
+
   try {
-    const res  = await authFetch(`${getApiUrl()}/verify-ownership`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
-    const data = await res.json();
-    showResponse('POST /verify-ownership', data);
-  } catch(e) { showToast('Could not reach /verify-ownership'); }
+    showToast('Verifying ownership...');
+    const res = await authFetch(
+      `${getApiUrl()}/verify-ownership?filename=${encodeURIComponent(filenameToVerify || lastUploadedFilename)}&claimed_owner_id=${encodeURIComponent(claimedEmail)}`,
+      { method: 'POST' }
+    );
+    // ✅ Replace with this entire block
+const data = await res.json();
+const confirmed = data.ownership_confirmed;
+const correlation = (data.correlation * 100).toFixed(4);
+
+const panel = document.getElementById('response-panel');
+const ttl   = document.getElementById('response-title');
+const body  = document.getElementById('response-body');
+
+if (ttl) ttl.textContent = 'POST /verify-ownership';
+if (body) body.innerHTML = `
+  <div style="display:flex;flex-direction:column;gap:6px;font-family:'DM Sans',sans-serif;white-space:normal;line-height:1.4;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+      background:${confirmed ? 'rgba(46,204,138,0.08)' : 'rgba(247,95,95,0.08)'};
+      border:0.5px solid ${confirmed ? 'rgba(46,204,138,0.3)' : 'rgba(247,95,95,0.3)'};
+      border-radius:8px;">
+      <span style="font-size:13px;line-height:1;">${confirmed ? '✅' : '❌'}</span>
+      <div style="display:flex;flex-direction:column;gap:1px;">
+        <span style="font-size:12px;font-weight:700;color:${confirmed ? '#2ecc8a' : '#f75f5f'};">${confirmed ? 'Ownership Confirmed' : 'Ownership Not Confirmed'}</span>
+        <span style="font-size:10px;color:#9ca3be;">${confirmed ? 'This file belongs to the claimed owner' : 'Does not belong to claimed owner'}</span>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#1b1f2c;border-radius:7px;">
+      <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.06em;">Claimed Owner</span>
+      <span style="font-size:12px;color:#eef0f8;font-weight:500;">${data.owner_id}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#1b1f2c;border-radius:7px;">
+      <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.06em;">Watermark Match</span>
+      <span style="font-size:12px;color:#eef0f8;font-weight:500;">${correlation}%</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#1b1f2c;border-radius:7px;">
+      <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.06em;">Verdict</span>
+      <span style="font-size:12px;font-weight:700;color:${confirmed ? '#2ecc8a' : '#f75f5f'};">${confirmed ? '✓ VERIFIED' : '✗ REJECTED'}</span>
+    </div>
+  </div>`;
+
+  if (panel) {
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+  } catch(e) {
+    console.error(e);
+    showToast('Could not reach /verify-ownership');
+  }
 }
 
-/* ── POST /generate-takedown ── */
+// Add this function back in upload.js — place it before callSendTakedown
 async function callTakedownGenerate() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to generate a takedown notice'); return; }
+  const alertId = prompt('Enter Alert ID (copy from View Alerts response):');
+  if (!alertId) return;
   try {
-    const res  = await authFetch(`${getApiUrl()}/generate-takedown`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
+    const res  = await authFetch(`${getApiUrl()}/generate-takedown?alert_id=${encodeURIComponent(alertId)}`, { method:'POST' });
     const data = await res.json();
-    showResponse('POST /generate-takedown', data);
+
+    // ✅ Render as proper card instead of JSON
+    const panel = document.getElementById('response-panel');
+    const ttl   = document.getElementById('response-title');
+    const body  = document.getElementById('response-body');
+
+    if (ttl) ttl.textContent = 'POST /generate-takedown';
+    if (body) body.innerHTML = data.error ? `
+      <div style="padding:10px 12px;background:rgba(247,95,95,0.08);border:0.5px solid rgba(247,95,95,0.3);border-radius:8px;font-size:12px;color:#f75f5f;">
+        ❌ ${data.error}
+      </div>` : `
+      <div style="display:flex;flex-direction:column;gap:6px;font-family:'DM Sans',sans-serif;white-space:normal;line-height:1.4;">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+          background:rgba(79,142,247,0.08);border:0.5px solid rgba(79,142,247,0.3);border-radius:8px;">
+          <span style="font-size:13px;">📄</span>
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span style="font-size:12px;font-weight:700;color:#4f8ef7;">Takedown Notice Generated</span>
+            <span style="font-size:10px;color:#9ca3be;">Ready to send to violator</span>
+          </div>
+        </div>
+        <div style="padding:10px 12px;background:#1b1f2c;border-radius:7px;
+          font-size:11px;color:#9ca3be;line-height:1.8;white-space:pre-wrap;font-family:monospace;">
+${data.notice.trim()}
+        </div>
+      </div>`;
+
+    if (panel) {
+      panel.style.display = 'block';
+      panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+
   } catch(e) { showToast('Could not reach /generate-takedown'); }
 }
 
 /* ── POST /send-takedown ── */
 async function callSendTakedown() {
   pulseBtn(event.currentTarget);
-  if (!lastUploadedFilename) { showToast('Upload an image first to send a takedown notice'); return; }
+  const alertId = prompt('Enter Alert ID (copy from View Alerts response):');
+  if (!alertId) return;
+  const toEmail = prompt('Enter the violator email to send takedown to:');
+  if (!toEmail) return;
   try {
-    const res  = await authFetch(`${getApiUrl()}/send-takedown`, { method:'POST', body: JSON.stringify({ filename: lastUploadedFilename }), headers:{ 'Content-Type':'application/json' } });
+    const res  = await authFetch(
+      `${getApiUrl()}/send-takedown?alert_id=${encodeURIComponent(alertId)}&to_email=${encodeURIComponent(toEmail)}`,
+      { method:'POST' }
+    );
     const data = await res.json();
     showResponse('POST /send-takedown', data);
     showToast('📧 Takedown email sent!');
@@ -197,7 +321,10 @@ function showResponse(title, data) {
   const ttl   = document.getElementById('response-title');
   const body  = document.getElementById('response-body');
   if (ttl)   ttl.textContent  = title;
-  if (body)  body.textContent = JSON.stringify(data, null, 2);
+  if (body) {
+    body.innerHTML = '';  // clear previous content
+    body.textContent = JSON.stringify(data, null, 2);
+  }
   if (panel) { panel.style.display='block'; panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
 }
 

@@ -101,10 +101,12 @@ def embed_watermark(image_path,owner_id):
     img_array = np.array(img,dtype=np.float32)
     seed = sum(ord(c) for c in owner_id)
     np.random.seed(seed)
-    watermark = np.random.normal(0,0.5,img_array.shape)
+    watermark = np.random.normal(0,8,img_array.shape)
     watermarked = np.clip(img_array+watermark,0,255).astype(np.uint8)
     watermarked_img = PILImage.fromarray(watermarked)
-    watermarked_img.save(image_path)
+    png_path = image_path.rsplit(".", 1)[0] + "_wm.png"
+    watermarked_img.save(png_path,format="PNG")
+    return png_path
 
 
 def extract_watermark(image_path,claimer_owner_id):
@@ -112,7 +114,7 @@ def extract_watermark(image_path,claimer_owner_id):
     img_array = np.array(img,dtype=np.float32)
     seed = sum(ord(c) for c in claimer_owner_id)
     np.random.seed(seed)
-    expected_watermark = np.random.normal(0,0.5,img_array.shape)
+    expected_watermark = np.random.normal(0,8,img_array.shape)
     correlation_matrix = np.corrcoef(img_array.flatten(),expected_watermark.flatten())
     r = correlation_matrix[0][1]
-    return {"owner_id":claimer_owner_id,"correlation":float(r),"ownership_confirmed":r>0.01}
+    return {"owner_id":claimer_owner_id,"correlation":float(r),"ownership_confirmed":bool(r>0.01)}

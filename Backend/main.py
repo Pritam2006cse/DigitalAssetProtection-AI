@@ -3,7 +3,9 @@ from auth import get_current_user, hash_password, verify_password, create_access
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from storage import upload_to_gcs
+from dotenv import load_dotenv
 from embedding import embed_watermark, extract_watermark, get_embedding
+from google.cloud import storage as gcs_storage
 from db import save_content
 from db import db
 from matcher import find_matches
@@ -12,6 +14,7 @@ import shutil
 from google.cloud import firestore
 from email_service import send_email
 import os
+load_dotenv()
 os.makedirs("temp", exist_ok=True)
 
 
@@ -89,10 +92,21 @@ def get_risk(similarity):
 
 def process_asset(file_location: str, filename: str, user_id: str):
     try:
-        url = upload_to_gcs(file_location, filename)
         dna_vector,file_type = get_embedding(file_location)
+        upload_location = file_location
         if file_type == "image":
-            embed_watermark(file_location,user_id)
+            png_path = embed_watermark(file_location, user_id)
+            upload_location = png_path
+            safe_user = user_id.replace("@", "_").replace(".", "_")
+            unique_filename = f"{safe_user}_{os.path.basename(png_path)}"
+            filename = unique_filename
+            print(f"DEBUG original file: {file_location}")
+            print(f"DEBUG png_path returned: {png_path}")
+            print(f"DEBUG upload_location: {upload_location}")
+            print(f"DEBUG upload_location exists: {os.path.exists(upload_location)}")
+            print(f"DEBUG new filename: {filename}")
+        url = upload_to_gcs(upload_location, filename)
+        print(f"DEBUG GCS url: {url}")
         matches = find_matches(dna_vector,file_type)
         current_time = datetime.now()
         infringements = []
@@ -127,6 +141,10 @@ def process_asset(file_location: str, filename: str, user_id: str):
     finally:
         if os.path.exists(file_location):
             os.remove(file_location)
+        if file_type == "image":
+            png_path = file_location.rsplit(".", 1)[0] + "_wm.png"
+            if os.path.exists(png_path):
+                os.remove(png_path)
 
 
 @app.get("/status/{filename}")
@@ -230,12 +248,24 @@ def get_my_alerts(user_id: str = Depends(get_current_user)):
 
 
 @app.post("/verify-ownership")
-async def verify_ownership(file: UploadFile = File(...),claimed_owner_id: str = "",user_id: str = Depends(get_current_user)):
-    file_location = f"temp/{file.filename}"
-    with open(file_location,"wb") as buffer:
-        shutil.copyfileobj(file.file,buffer)
+async def verify_ownership(
+    filename: str,                              # just pass filename
+    claimed_owner_id: str = "",
+    user_id: str = Depends(get_current_user)
+):
+    # Download watermarked file from GCS
+    client = gcs_storage.Client.from_service_account_json(
+        os.getenv("Service_Account_Key")
+    )
+    bucket = client.bucket(os.getenv("STORAGE_BUCKET"))
+    blob = bucket.blob(filename)
+    
+    file_location = f"temp/verify_{filename}"
+    blob.download_to_filename(file_location)   # get watermarked copy from GCS
+    
     try:
-        result = extract_watermark(file_location,claimed_owner_id)
+        result = extract_watermark(file_location, claimed_owner_id)
+        print(f"DEBUG correlation: {result['correlation']}")
         return result
     finally:
         if os.path.exists(file_location):
