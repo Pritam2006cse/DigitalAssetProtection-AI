@@ -88,7 +88,7 @@ def get_risk(similarity):
     elif similarity > 0.85:
         return "MEDIUM"
     return "LOW"
-
+#/*comment*
 
 def process_asset(file_location: str, filename: str, user_id: str):
     try:
