@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DigitalAsset Protection — Asset Graph</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="../css/graph.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 2L3 9v9c0 6.075 5.57 11.465 13 13 7.43-1.535 13-6.925 13-13V9L16 2z" fill="url(#tlg)" opacity="0.9"/><path d="M11 16l3.5 3.5L21 12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="tlg" x1="3" y1="2" x2="29" y2="31" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8ef7"/><stop offset="1" stop-color="#7c5df7"/></linearGradient></defs></svg>
+      </div>
+      <span class="topbar-title">DigitalAsset<em>Protection</em></span>
+    </div>
+    <nav class="topbar-nav">
+      <a href="upload.html" class="nav-link">Dashboard</a>
+      <a href="alerts.html" class="nav-link">Alerts</a>
+      <a href="graph.html"  class="nav-link active">Asset Graph</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <span class="user-name" id="user-name">User</span>
+          <span class="user-email" id="user-email">email</span>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <main class="graph-main">
+
+    <!-- Hero -->
+    <div class="graph-hero">
+      <div class="graph-hero-inner">
+        <div class="breadcrumb"><a href="upload.html">← Back to Dashboard</a></div>
+        <div class="hero-row">
+          <div>
+            <h1>Asset Graph</h1>
+            <p class="graph-desc">Visual map of original assets and their copies</p>
+          </div>
+          <button class="btn-refresh" onclick="loadGraph()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="graph-body">
+
+      <!-- Stats strip -->
+      <div class="graph-stats" id="graph-stats" style="display:none">
+        <div class="gs-stat">
+          <span class="gs-num" id="gs-total">0</span>
+          <span class="gs-lbl">Total Assets</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="gs-stat">
+          <span class="gs-num" id="gs-originals">0</span>
+          <span class="gs-lbl">Originals</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="gs-stat">
+          <span class="gs-num danger" id="gs-copies">0</span>
+          <span class="gs-lbl">Copies</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="gs-stat">
+          <span class="gs-num" id="gs-edges">0</span>
+          <span class="gs-lbl">Connections</span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="graph-legend" id="graph-legend" style="display:none">
+        <div class="legend-item">
+          <div class="legend-dot original"></div>
+          <span>Original Asset</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot copy"></div>
+          <span>Copy / Derived</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-arrow"></div>
+          <span>Derived from</span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-card" id="loading-card">
+        <div class="loading-spinner"></div>
+        <span>Loading asset graph...</span>
+      </div>
+
+      <!-- Empty -->
+      <div class="empty-card" id="empty-card" style="display:none">
+        <div class="empty-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </div>
+        <h3>No assets yet</h3>
+        <p>Upload files to see the asset provenance graph.</p>
+        <a href="upload.html" class="btn-secondary">Upload an asset</a>
+      </div>
+
+      <!-- Error -->
+      <div class="error-card" id="error-card" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="error-text">Could not load graph.</span>
+      </div>
+
+      <!-- Graph container -->
+      <div class="graph-container" id="graph-container" style="display:none">
+        <div id="graph-canvas"></div>
+
+        <!-- Node detail panel -->
+        <div class="node-detail" id="node-detail" style="display:none">
+          <div class="node-detail-header">
+            <span class="node-detail-title">Asset Details</span>
+            <button class="node-detail-close" onclick="closeDetail()">✕</button>
+          </div>
+          <div class="node-detail-body" id="node-detail-body"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../js/auth.js"></script>
+  <script src="../js/graph.js"></script>
+</body>
+</html>

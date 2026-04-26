@@ -11,14 +11,73 @@ document.addEventListener('DOMContentLoaded', () => {
   const inp = document.getElementById('api-url');
   if (inp) inp.value = getApiUrl();
 
-  
   const saved = sessionStorage.getItem('dap_last_filename');
   if (saved) {
     lastUploadedFilename = saved;
     document.getElementById('btn-check-status').style.display = 'flex';
     showToast(`Last upload: ${saved}`);
   }
-});
+
+  // ✅ ADD HERE — before the closing });
+  const binCanvas = document.getElementById('bin-canvas');
+  if (binCanvas) {
+    const binCtx    = binCanvas.getContext('2d');
+    const dashRight = document.body;
+    const FONT_SIZE = 18;
+    let cols = [];
+
+    function resizeBin() {
+      binCanvas.width  = window.innerWidth;
+      binCanvas.height = window.innerHeight;
+      initCols();
+    }
+
+    function initCols() {
+      const count = Math.floor(binCanvas.width / (FONT_SIZE * 0.8));
+      cols = Array.from({ length: count }, (_, i) => ({
+        x:       i * FONT_SIZE  * 0.8,
+        y:       Math.random() * -binCanvas.height,
+        speed:   0.3 + Math.random() * 0.6,
+        opacity: 0.25 + Math.random() * 0.08,
+        chars:   Array.from({ length: Math.ceil(binCanvas.height / FONT_SIZE) + 4 },
+                 () => Math.random() > 0.5 ? '1' : '0'),
+        timer: 0,
+      }));
+    }
+
+    function drawBin() {
+      binCtx.clearRect(0, 0, binCanvas.width, binCanvas.height);
+      binCtx.font = `400 ${FONT_SIZE}px monospace`;
+      binCtx.textAlign = 'center';
+      cols.forEach(col => {
+        col.y += col.speed;
+        if (col.y > binCanvas.height + FONT_SIZE * 4) {
+          col.y = -FONT_SIZE * (4 + Math.random() * 8);
+          col.speed = 0.3 + Math.random() * 0.6;
+        }
+        col.timer++;
+        if (col.timer > 20) {
+          col.chars[Math.floor(Math.random() * col.chars.length)] = Math.random() > 0.5 ? '1' : '0';
+          col.timer = 0;
+        }
+        col.chars.forEach((ch, i) => {
+          const cy = col.y + i * FONT_SIZE;
+          if (cy < -FONT_SIZE || cy > binCanvas.height + FONT_SIZE) return;
+          const fade = 1 - Math.abs(cy - binCanvas.height * 0.5) / (binCanvas.height * 0.55);
+          binCtx.globalAlpha = Math.max(0, col.opacity * fade * 1.8);
+          binCtx.fillStyle = '#4f8ef7';
+          binCtx.fillText(ch, col.x, cy);
+        });
+      });
+      binCtx.globalAlpha = 1;
+      requestAnimationFrame(drawBin);
+    }
+
+    resizeBin();
+    window.addEventListener('resize', resizeBin);
+    drawBin();
+  }
+}); 
 
 /* ── File select / drop ── */
 function handleFileSelect(e) { const f = e.target.files[0]; if(f) applyFile(f); }
@@ -117,16 +176,19 @@ async function doUpload() {
     if (chip) { chip.textContent = '✓ Protected'; chip.className = 'status-chip badge badge-success'; chip.style.display = 'inline-flex'; }
 
     // History
-    addHistoryItem({ filename:selectedFile.name, preview:document.getElementById('preview-img').src, matchCount:(data.matches||[]).length, url:data.url||'' });
+    addHistoryItem({ filename:selectedFile.name, preview: data.url || "", matchCount:(data.matches||[]).length, url:data.url||'' });
     renderHistory(); updateStats();
 
     // Store for results page
-    sessionStorage.setItem('dap_result', JSON.stringify({ ...data, _localPreview:document.getElementById('preview-img').src, _filename:selectedFile.name }));
+    //sessionStorage.setItem('dap_result', JSON.stringify({ ...data, _localPreview:document.getElementById('preview-img').src, _filename:selectedFile.name }));
 
-    txt.textContent = 'Done! Loading results...';
+    /*txt.textContent = 'Done! Loading results...';
     sp.style.display = 'none'; btn.disabled = false;
     await delay(400);
-    window.location.href = 'results.html';
+    window.location.href = 'results.html';*/
+    sp.style.display = 'none'; btn.disabled = false;
+    txt.textContent = 'Upload & Scan for Matches';
+    showToast('✅ Asset uploaded and protected!');
 
   } catch(err) {
     sp.style.display = 'none'; btn.disabled = false;
@@ -137,12 +199,34 @@ async function doUpload() {
 
 /* ── GET /status/{filename} ── */
 async function checkStatus() {
-  if (!lastUploadedFilename) { showToast('Upload an image first'); return; }
+  if (!lastUploadedFilename) { showToast('Upload a file first'); return; }
   showToast('Checking status…');
   try {
     const res  = await authFetch(`${getApiUrl()}/status/${encodeURIComponent(lastUploadedFilename)}`);
     const data = await res.json();
-    showResponse('GET /status/' + lastUploadedFilename, data);
+
+    const complete = data.status === 'Complete';
+    const panel = document.getElementById('response-panel');
+    const ttl   = document.getElementById('response-title');
+    const body  = document.getElementById('response-body');
+
+    if (ttl) ttl.textContent = 'GET /status';
+    if (body) body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+        background:${complete ? 'rgba(46,204,138,0.08)' : 'rgba(247,161,79,0.08)'};
+        border:0.5px solid ${complete ? 'rgba(46,204,138,0.3)' : 'rgba(247,161,79,0.3)'};
+        border-radius:8px;font-family:'DM Sans',sans-serif;white-space:normal;">
+        <span style="font-size:13px;">${complete ? '✅' : '⏳'}</span>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+          <span style="font-size:12px;font-weight:700;color:${complete ? '#2ecc8a' : '#f7a14f'};">
+            ${complete ? 'Processing Complete' : 'Still Processing'}
+          </span>
+          <span style="font-size:10px;color:#9ca3be;">
+            ${complete ? 'Your asset is protected and watermarked' : 'Please wait and check again shortly'}
+          </span>
+        </div>
+      </div>`;
+    if (panel) { panel.style.display='block'; panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   } catch(e) { showUploadError('Status check failed: ' + e.message); }
 }
 
@@ -152,7 +236,60 @@ async function callAlerts() {
   try {
     const res  = await authFetch(`${getApiUrl()}/alerts`);
     const data = await res.json();
-    showResponse('GET /alerts', data);
+
+    const panel = document.getElementById('response-panel');
+    const ttl   = document.getElementById('response-title');
+    const body  = document.getElementById('response-body');
+
+    if (ttl) ttl.textContent = 'GET /alerts';
+
+    if (!data || data.length === 0) {
+      if (body) body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+          background:rgba(46,204,138,0.08);border:0.5px solid rgba(46,204,138,0.3);
+          border-radius:8px;font-family:'DM Sans',sans-serif;white-space:normal;">
+          <span style="font-size:13px;">✅</span>
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span style="font-size:12px;font-weight:700;color:#2ecc8a;">No Alerts</span>
+            <span style="font-size:10px;color:#9ca3be;">No infringements detected for your assets</span>
+          </div>
+        </div>`;
+    } else {
+      const riskColor = r => r === 'HIGH' ? '#f75f5f' : r === 'MEDIUM' ? '#f7a14f' : '#4f8ef7';
+      const riskBg    = r => r === 'HIGH' ? 'rgba(247,95,95,0.08)' : r === 'MEDIUM' ? 'rgba(247,161,79,0.08)' : 'rgba(79,142,247,0.08)';
+      const riskBorder= r => r === 'HIGH' ? 'rgba(247,95,95,0.3)' : r === 'MEDIUM' ? 'rgba(247,161,79,0.3)' : 'rgba(79,142,247,0.3)';
+      const riskIcon  = r => r === 'HIGH' ? '🔴' : r === 'MEDIUM' ? '🟡' : '🔵';
+
+      if (body) body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;font-family:'DM Sans',sans-serif;white-space:normal;line-height:1.4;">
+          ${data.map(alert => `
+            <div style="border:0.5px solid ${riskBorder(alert.risk)};border-radius:8px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+                background:${riskBg(alert.risk)};">
+                <span style="font-size:12px;">${riskIcon(alert.risk)}</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-size:11px;font-weight:700;color:${riskColor(alert.risk)};">${alert.risk} RISK — ${(alert.similarity * 100).toFixed(1)}% match</span>
+                  <span style="font-size:10px;color:#9ca3be;">${new Date(alert.timestamp).toLocaleString()}</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding:7px 10px;background:#1b1f2c;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Owner</span>
+                  <span style="font-size:11px;color:#eef0f8;">${alert.owner_id}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Violator</span>
+                  <span style="font-size:11px;color:#f75f5f;">${alert.violator_id}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Alert ID</span>
+                  <span style="font-size:10px;color:#5c637d;font-family:monospace;">${alert.id}</span>
+                </div>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+    if (panel) { panel.style.display='block'; panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   } catch(e) { showToast('Could not reach /alerts — is the server running?'); }
 }
 
@@ -162,7 +299,80 @@ async function callGraph() {
   try {
     const res  = await authFetch(`${getApiUrl()}/graph`);
     const data = await res.json();
-    showResponse('GET /graph', data);
+
+    const panel = document.getElementById('response-panel');
+    const ttl   = document.getElementById('response-title');
+    const body  = document.getElementById('response-body');
+
+    if (ttl) ttl.textContent = 'GET /graph';
+
+    const nodes = data.nodes || [];
+    const edges = data.edges || [];
+
+    // Build a map of id → label for easy lookup
+    const nodeMap = {};
+    nodes.forEach(n => nodeMap[n.id] = n.label);
+
+    // Find which nodes are copies (have a parent)
+    const copiedIds = new Set(edges.map(e => e.to));
+    const parentMap = {};
+    edges.forEach(e => parentMap[e.to] = e.from);
+
+    if (nodes.length === 0) {
+      if (body) body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+          background:rgba(79,142,247,0.08);border:0.5px solid rgba(79,142,247,0.3);
+          border-radius:8px;font-family:'DM Sans',sans-serif;white-space:normal;">
+          <span style="font-size:13px;">📭</span>
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span style="font-size:12px;font-weight:700;color:#4f8ef7;">No Assets Yet</span>
+            <span style="font-size:10px;color:#9ca3be;">Upload files to see the asset graph</span>
+          </div>
+        </div>`;
+    } else {
+      if (body) body.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:6px;font-family:'DM Sans',sans-serif;white-space:normal;line-height:1.4;">
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;
+            background:#1b1f2c;border-radius:7px;margin-bottom:2px;">
+            <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Total Assets</span>
+            <span style="font-size:11px;color:#eef0f8;font-weight:600;">${nodes.length}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 10px;
+            background:#1b1f2c;border-radius:7px;margin-bottom:4px;">
+            <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Copies Detected</span>
+            <span style="font-size:11px;color:#f75f5f;font-weight:600;">${copiedIds.size}</span>
+          </div>
+          ${nodes.map(node => {
+            const isCopy = copiedIds.has(node.id);
+            const parentLabel = isCopy ? nodeMap[parentMap[node.id]] || 'Unknown' : null;
+            const cleanLabel = node.label
+              .replace(/_wm\.png$/, '')           // remove _wm.png
+              .replace(/^[^_]+_[^_]+_[^_]+_/, '') // remove user prefix like john_gmail_com_
+              || node.label;
+            return `
+            <div style="border:0.5px solid ${isCopy ? 'rgba(247,95,95,0.3)' : 'rgba(46,204,138,0.3)'};
+              border-radius:8px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+                background:${isCopy ? 'rgba(247,95,95,0.08)' : 'rgba(46,204,138,0.08)'};">
+                <span style="font-size:12px;">${isCopy ? '📋' : '📁'}</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-size:11px;font-weight:700;color:${isCopy ? '#f75f5f' : '#2ecc8a'};">
+                    ${isCopy ? 'COPY' : 'ORIGINAL'}
+                  </span>
+                  <span style="font-size:10px;color:#9ca3be;word-break:break-all;">${cleanLabel}</span>
+                </div>
+              </div>
+              ${isCopy ? `
+              <div style="padding:6px 10px;background:#1b1f2c;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.05em;">Copied from</span>
+                <span style="font-size:10px;color:#f7a14f;">${parentLabel.replace(/_wm\.png$/, '').replace(/^[^_]+_[^_]+_[^_]+_/, '') || parentLabel}</span>
+              </div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    if (panel) { panel.style.display='block'; panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   } catch(e) { showToast('Could not reach /graph — is the server running?'); }
 }
 
@@ -367,12 +577,10 @@ function renderHistory() {
 
 function updateStats() {
   const h = getHistory();
-  const m = h.reduce((s,i)=>s+(i.matchCount||0),0);
   const p = h.filter(i=>i.matchCount===0).length;
   const t = document.getElementById('stat-total');
-  const ma= document.getElementById('stat-matches');
   const pr= document.getElementById('stat-protected');
-  if(t) t.textContent=h.length; if(ma) ma.textContent=m; if(pr) pr.textContent=p;
+  if(t) t.textContent=h.length; if(pr) pr.textContent=p;
 }
 
 function resetHistory() {

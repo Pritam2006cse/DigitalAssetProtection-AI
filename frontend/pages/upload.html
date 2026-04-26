@@ -51,7 +51,6 @@
 
     <div class="stats-row">
       <div class="stat-box"><span class="stat-n" id="stat-total">0</span><span class="stat-l">Uploads</span></div>
-      <div class="stat-box"><span class="stat-n" id="stat-matches">0</span><span class="stat-l">Matches</span></div>
       <div class="stat-box"><span class="stat-n" id="stat-protected">0</span><span class="stat-l">Protected</span></div>
     </div>
 
@@ -121,11 +120,11 @@
 
   <!-- ══ RIGHT ══ -->
   <section class="dash-right">
-
+    <canvas id="bin-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.6;"></canvas>
     <div class="upload-header">
       <div>
         <h2>Upload Asset</h2>
-        <p>JPG · JPEG · WEBP · HEIC &nbsp;·&nbsp; Max 20MB</p>
+        <p>JPG/PNG/PDF/TXT/MP4  &nbsp;&nbsp; (Max 20MB)</p>
       </div>
       <button class="btn-clear-upload" id="btn-clear-upload" onclick="clearFile()" style="display:none">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>

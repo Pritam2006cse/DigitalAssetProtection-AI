@@ -42,6 +42,58 @@
 .hero-stat-l { font-size: 11px; color: var(--text3); font-weight: 500; }
 @keyframes count-up { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 
+/* ===== NAVBAR WITH BACKGROUND IMAGE ===== */
+.topbar {
+  position: relative;
+  z-index: 2;
+
+  /* glass base */
+  background: rgba(10, 12, 18, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden; /* IMPORTANT */
+}
+
+/* ===== MAP IMAGE INSIDE HEADER ===== */
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url("world.jpg"); /* your image */
+  background-size: cover;
+  background-position: center;
+
+  filter: grayscale(100%) contrast(2) brightness(6);
+  opacity: 0.55;
+
+  z-index: 0;
+}
+
+/* ===== BLEND OVERLAY (for readability) ===== */
+.topbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(8,10,16,0.4),
+    rgba(8,10,16,0.7)
+  );
+
+  z-index: 1;
+}
+
+/* ===== ENSURE CONTENT IS ABOVE ===== */
+.topbar > * {
+  position: relative;
+  z-index: 2;
+}
+
+
 /* ── Filter bar ── */
 .filter-bar {
   background: var(--bg2);

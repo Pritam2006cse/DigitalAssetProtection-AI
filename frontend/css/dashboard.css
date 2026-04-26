@@ -39,6 +39,57 @@
   text-transform:uppercase; letter-spacing:0.05em;
 }
 
+/* ===== NAVBAR WITH BACKGROUND IMAGE ===== */
+.topbar {
+  position: relative;
+  z-index: 2;
+
+  /* glass base */
+  background: rgba(10, 12, 18, 0.6);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden; /* IMPORTANT */
+}
+
+/* ===== MAP IMAGE INSIDE HEADER ===== */
+.topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url("world.jpg"); /* your image */
+  background-size: cover;
+  background-position: center;
+
+  filter: grayscale(100%) contrast(2) brightness(6);
+  opacity: 0.55;
+
+  z-index: 0;
+}
+
+/* ===== BLEND OVERLAY (for readability) ===== */
+.topbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(8,10,16,0.4),
+    rgba(8,10,16,0.7)
+  );
+
+  z-index: 1;
+}
+
+/* ===== ENSURE CONTENT IS ABOVE ===== */
+.topbar > * {
+  position: relative;
+  z-index: 2;
+}
+
 /* Stats */
 .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .stat-box {
@@ -147,7 +198,7 @@
 .config-hint { display:block; font-size:10px; color:var(--text3); margin-top:5px; }
 
 /* ══ RIGHT ══ */
-.dash-right { padding:28px 32px; display:flex; flex-direction:column; gap:18px; max-width:640px; }
+.dash-right { position: relative;overflow: hidden;padding:28px 32px; display:flex; flex-direction:column; gap:18px; width: 100%;max-width: none; }
 
 .upload-header { display:flex; align-items:flex-start; justify-content:space-between; }
 .upload-header h2 { font-family:'Syne',sans-serif; font-size:21px; font-weight:700; margin-bottom:3px; }
@@ -161,6 +212,19 @@
 }
 .btn-clear-upload:hover { border-color:var(--warn); color:var(--warn); }
 .btn-clear-upload svg { stroke:currentColor; }
+
+
+/* ✅ Add to dashboard.css */
+.upload-header,
+.drop-zone,
+.upload-actions,
+.status-bar,
+.response-panel,
+.error-card { 
+  position: relative; 
+  z-index: 1; 
+}
+
 
 /* Drop zone */
 .drop-zone {
@@ -256,4 +320,15 @@
   .dash-layout { grid-template-columns:1fr; }
   .dash-left { border-right:none; border-bottom:0.5px solid var(--border); }
   .dash-right { padding:22px 18px; }
+}
+
+#bin-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
 }

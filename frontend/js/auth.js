@@ -6,16 +6,23 @@ const SESSION_KEY = 'dap_session';
 const HISTORY_KEY = 'dap_history';
 const API_KEY     = 'dap_api_url';
 
+function getHistoryKey() {
+  const session = getSession();
+  const email = session?.email || 'guest';
+  return `dap_history_${email}`;
+}
+
 /* ── Session ── */
 function saveSession(user) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
 function getSession()      { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } }
 function clearSession()    { sessionStorage.removeItem(SESSION_KEY); sessionStorage.removeItem('dap_result'); }
 
 /* ── History (persists in localStorage) ── */
-function getHistory()       { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
-function saveHistory(arr)   { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); }
+// ✅ Update these four functions
+function getHistory()       { try { return JSON.parse(localStorage.getItem(getHistoryKey())) || []; } catch { return []; } }
+function saveHistory(arr)   { localStorage.setItem(getHistoryKey(), JSON.stringify(arr)); }
 function addHistoryItem(it) { const a = getHistory(); a.unshift({...it, time:new Date().toISOString()}); saveHistory(a.slice(0,50)); }
-function clearHistory()     { localStorage.removeItem(HISTORY_KEY); }
+function clearHistory()     { localStorage.removeItem(getHistoryKey()); }
 
 /* ── API URL helper ── */
 function getApiUrl()       { return (localStorage.getItem(API_KEY) || 'http://localhost:8000').replace(/\/$/,''); }
@@ -38,7 +45,12 @@ function populateUserUI(user) {
   ['user-email','profile-email'].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=user.email; });
 }
 
-function logout() { clearSession(); window.location.href = isOnSubPage() ? '../index.html' : 'index.html'; }
+// Update logout
+function logout() { 
+  clearHistory();   // ← clears only current user's history
+  clearSession(); 
+  window.location.href = isOnSubPage() ? '../index.html' : 'index.html'; 
+}
 
 /* Auto-guard on protected pages */
 (function initPage() {
