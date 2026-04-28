@@ -9,14 +9,13 @@ from google.cloud import storage as gcs_storage
 from db import save_content
 from db import db
 from matcher import find_matches
-from datetime import datetime
+from datetime import datetime,timezone
 import shutil
 from google.cloud import firestore
 from email_service import send_email
 import os
 load_dotenv()
 os.makedirs("temp", exist_ok=True)
-
 
 app = FastAPI()
 app.add_middleware(
@@ -83,14 +82,15 @@ def upload_file(file:UploadFile=File(...),background_tasks: BackgroundTasks = Ba
 
 
 def get_risk(similarity):
-    if similarity > 0.95:
+    if similarity > 0.90:
         return "HIGH"
-    elif similarity > 0.85:
+    elif similarity > 0.75:
         return "MEDIUM"
     return "LOW"
 #/*comment*
 
 def process_asset(file_location: str, filename: str, user_id: str):
+    file_type = None
     try:
         dna_vector,file_type = get_embedding(file_location)
         upload_location = file_location
@@ -108,7 +108,7 @@ def process_asset(file_location: str, filename: str, user_id: str):
         url = upload_to_gcs(upload_location, filename)
         print(f"DEBUG GCS url: {url}")
         matches = find_matches(dna_vector,file_type)
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
         infringements = []
 
         for match in matches:
@@ -134,6 +134,7 @@ def process_asset(file_location: str, filename: str, user_id: str):
                 "url": url,
                 "embedding": list(dna_vector),
                 "owner_id": user_id,
+                "file_type": file_type,
                 "derived_from": parent_id,
                 "timestamp": current_time
                 }
@@ -249,23 +250,66 @@ def get_my_alerts(user_id: str = Depends(get_current_user)):
 
 @app.post("/verify-ownership")
 async def verify_ownership(
-    filename: str,                              # just pass filename
+    filename: str,
     claimed_owner_id: str = "",
     user_id: str = Depends(get_current_user)
 ):
-    # Download watermarked file from GCS
+    # ✅ Step 1 — Check Firestore who uploaded this filename first
+    # Strip the user prefix to get the base filename
+    # e.g. "john_gmail_com_SayanImg1_wm.png" → find all docs with same base
+    base_name = "_".join(filename.split("_")[3:]) if filename.count("_") >= 3 else filename
+
+    # Find all documents with this base filename pattern
+    all_contents = db.collection("contents").stream()
+    matching_docs = []
+
+    for doc in all_contents:
+        data = doc.to_dict()
+        doc_filename = data.get("filename", "")
+        doc_base = "_".join(doc_filename.split("_")[3:]) if doc_filename.count("_") >= 3 else doc_filename
+        if doc_base == base_name:
+            matching_docs.append({
+                "owner_id": data.get("owner_id"),
+                "timestamp": data.get("timestamp"),
+                "filename": doc_filename
+            })
+
+    # ✅ Step 2 — Sort by timestamp to find who uploaded first
+    if matching_docs:
+        matching_docs.sort(key=lambda x: str(x["timestamp"]))
+        first_uploader = matching_docs[0]["owner_id"]
+        first_filename = matching_docs[0]["filename"]
+    else:
+        first_uploader = None
+        first_filename = filename
+
+    # ✅ Step 3 — If claimed owner is not the first uploader, reject immediately
+    if first_uploader and claimed_owner_id != first_uploader:
+        return {
+            "owner_id": claimed_owner_id,
+            "correlation": 0.0,
+            "ownership_confirmed": False,
+            "reason": f"Original owner is {first_uploader}. This file was uploaded first by them."
+        }
+
+    # ✅ Step 4 — Download the FIRST uploader's watermarked file from GCS
     client = gcs_storage.Client.from_service_account_json(
         os.getenv("Service_Account_Key")
     )
     bucket = client.bucket(os.getenv("STORAGE_BUCKET"))
-    blob = bucket.blob(filename)
-    
-    file_location = f"temp/verify_{filename}"
-    blob.download_to_filename(file_location)   # get watermarked copy from GCS
-    
+    blob = bucket.blob(first_filename)
+
+    file_location = f"temp/verify_{first_filename}"
+    blob.download_to_filename(file_location)
+
     try:
         result = extract_watermark(file_location, claimed_owner_id)
+        print(f"DEBUG first_uploader: {first_uploader}")
+        print(f"DEBUG claimed_owner_id: {claimed_owner_id}")
         print(f"DEBUG correlation: {result['correlation']}")
+
+        # ✅ Add reason to response
+        result["reason"] = "Watermark matches original owner" if result["ownership_confirmed"] else "Watermark does not match"
         return result
     finally:
         if os.path.exists(file_location):

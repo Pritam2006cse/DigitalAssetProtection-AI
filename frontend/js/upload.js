@@ -176,7 +176,12 @@ async function doUpload() {
     if (chip) { chip.textContent = '✓ Protected'; chip.className = 'status-chip badge badge-success'; chip.style.display = 'inline-flex'; }
 
     // History
-    addHistoryItem({ filename:selectedFile.name, preview: data.url || "", matchCount:(data.matches||[]).length, url:data.url||'' });
+    addHistoryItem({ 
+  filename: selectedFile.name, 
+  preview: "",   // ← empty, saves space
+  matchCount: (data.matches||[]).length, 
+  url: data.url||'' 
+    });
     renderHistory(); updateStats();
 
     // Store for results page
@@ -445,6 +450,10 @@ if (body) body.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#1b1f2c;border-radius:7px;">
       <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.06em;">Verdict</span>
       <span style="font-size:12px;font-weight:700;color:${confirmed ? '#2ecc8a' : '#f75f5f'};">${confirmed ? '✓ VERIFIED' : '✗ REJECTED'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#1b1f2c;border-radius:7px;">
+      <span style="font-size:10px;color:#5c637d;text-transform:uppercase;letter-spacing:0.06em;">Reason</span>
+      <span style="font-size:11px;color:#9ca3be;text-align:right;max-width:60%;">${data.reason || '—'}</span>
     </div>
   </div>`;
 

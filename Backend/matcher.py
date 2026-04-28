@@ -3,7 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from db import db
 
 def find_matches(dna_vector,file_type):
-    thresholds = {"image":0.85,"video":0.90,"document":0.70}
+    thresholds = {"image":0.75,"video":0.80,"document":0.65}
     threshold = thresholds.get(file_type,0.85)
     contents = db.collection("contents").stream()
     matches = []
@@ -11,6 +11,9 @@ def find_matches(dna_vector,file_type):
     for doc in contents:
         data = doc.to_dict()
         if "embedding" not in data:
+            continue
+        existing_file_type = data.get("file_type", "image")
+        if existing_file_type != file_type:
             continue
         existing_dna_vector = np.array(data["embedding"]).reshape(1,-1)
         similarity = cosine_similarity(existing_dna_vector,new_dna_vector)[0][0]

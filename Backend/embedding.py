@@ -23,14 +23,27 @@ vertexai.init(
     credentials=credentials
 )
 
+def preprocess_image(image_path):
+    img = PILImage.open(image_path).convert("RGB")
+    img = img.resize((512, 512), PILImage.LANCZOS)
+    preprocessed_path = image_path.rsplit(".", 1)[0] + "_prep.png"
+    img.save(preprocessed_path)
+    return preprocessed_path
+
+
 def get_image_embedding(image_path):
-    # Model remains the same
     model = MultiModalEmbeddingModel.from_pretrained("multimodalembedding@001")
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
-    image = Image(image_bytes=image_bytes)
-    embeddings = model.get_embeddings(image=image)
-    return embeddings.image_embedding
+    preprocessed_path = preprocess_image(image_path)
+    try:
+        with open(preprocessed_path, "rb") as f:
+            image_bytes = f.read()
+        image = Image(image_bytes=image_bytes)
+        embeddings = model.get_embeddings(image=image)
+        return embeddings.image_embedding
+    finally:
+        if os.path.exists(preprocessed_path):
+            os.remove(preprocessed_path)
+
 
 def get_video_embedding(video_path):
     cap = cv2.VideoCapture(video_path)
