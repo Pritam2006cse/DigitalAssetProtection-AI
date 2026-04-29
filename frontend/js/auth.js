@@ -25,7 +25,7 @@ function addHistoryItem(it) { const a = getHistory(); a.unshift({...it, time:new
 function clearHistory()     { localStorage.removeItem(getHistoryKey()); }
 
 /* ── API URL helper ── */
-function getApiUrl()       { return (localStorage.getItem(API_KEY) || 'http://localhost:8000').replace(/\/$/,''); }
+function getApiUrl()       { return (localStorage.getItem(API_KEY) || 'https://digitalassetprotection-ai-998894594675.europe-west1.run.app').replace(/\/$/,''); }
 function saveApiUrl(url)   { localStorage.setItem(API_KEY, url); }
 
 /* ── Auth guard ── */

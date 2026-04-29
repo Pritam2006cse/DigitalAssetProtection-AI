@@ -13,6 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function getApiUrl() {
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://digitalassetprotection-ai-998894594675.europe-west1.run.app';
+  }
+  // Otherwise use the stored dev URL
   return (localStorage.getItem('dap_api_url') || 'http://localhost:8000').replace(/\/$/, '');
 }
 
