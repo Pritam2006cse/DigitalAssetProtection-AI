@@ -314,3 +314,12 @@ async def verify_ownership(
     finally:
         if os.path.exists(file_location):
             os.remove(file_location)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    # Pulls 8080 from the Cloud Run environment
+    port = int(os.environ.get("PORT", 8080))
+    # Must use 0.0.0.0 to be reachable
+    uvicorn.run(app, host="0.0.0.0", port=port)
