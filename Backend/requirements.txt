@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-multipart
+python-jose
+passlib
+bcrypt==4.0.1
+google-cloud-storage
+google-cloud-firestore
+google-cloud-aiplatform
+opencv-python-headless
+numpy
+pymupdf
+python-docx
+scikit-learn
+python-dotenv
+pillow
+pydantic
