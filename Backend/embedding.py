@@ -11,10 +11,18 @@ import numpy as np
 from dotenv import load_dotenv
 load_dotenv()
 
-# Path to your JSON key file
-SERVICE_ACCOUNT_KEY = os.getenv("Service_Account_Key")
-# Load credentials explicitly for Vertex AI
-credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_KEY)
+if os.getenv("GOOGLE_CREDENTIALS_JSON"):
+    import json
+    from google.oauth2 import service_account
+    creds_dict = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+elif os.getenv("Service_Account_Key"):
+    credentials = service_account.Credentials.from_service_account_file(
+        os.getenv("Service_Account_Key")
+    )
+else:
+    credentials = None  # ← Cloud Run uses built-in
+
 
 # Initialize Vertex AI with the project, location, and credentials
 vertexai.init(
